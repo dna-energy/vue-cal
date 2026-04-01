@@ -30,7 +30,7 @@
       :key="i"
       :class="{ 'vuecal__weekday--today': day.isToday }"
       :start="day.date"
-      :end="new Date(day.date.getTime() + 24 * 60 * 60 * 1000 - 1)"
+      :end="day.allDayEnd"
       :index="i"
       all-day)
       template(v-if="$slots['event.all-day']" #event.all-day="params")
@@ -68,9 +68,10 @@ const weekDays = computed(() => {
   // Regardless of how many view rows, we always want to display a maximum of view cols headings,
   // hence the slice(0, view.cols).
   return view.cellDates.slice(0, config.horizontal ? view.rows : view.cols).map(({ start }) => ({
-    id: weekdays[start.getDay()],
+    id: weekdays[dateUtils.getWeekdaySun0(start)],
     date: start,
-    dateNumber: start.getDate(),
+    dateNumber: dateUtils.getCalendarDate(start),
+    allDayEnd: dateUtils.endOfDay(start),
     day: dateUtils.formatDate(start, 'dddd'),
     'day-sm': dateUtils.formatDate(start, 'ddd'),
     'day-xs': dateUtils.formatDate(start, 'dd'),

@@ -23,9 +23,8 @@
       vue-cal.demo.full-cal(
         v-model:selected-date="selectedDate"
         v-model:view-date="viewDate"
-        :time-from="9 * 60"
+        time-zone="Australia/Brisbane"
         :time-step="20"
-        :time-to="18 * 60"
         :time-cell-height="25"
         :schedules="demoExample.schedules"
         :editable-events="demoExample.editable"

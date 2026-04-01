@@ -122,24 +122,32 @@ export const useDateUtils = (initTexts, EnUs, getTimeZone = () => '') => {
   }
 
   const addHours = (date, hours) => {
+    const z = tz()
+    if (z) return dtInZone(date, z).plus({ hours }).toJSDate()
     const d = new Date(date.valueOf())
     d.setHours(d.getHours() + hours)
     return d
   }
 
   const subtractHours = (date, hours) => {
+    const z = tz()
+    if (z) return dtInZone(date, z).minus({ hours }).toJSDate()
     const d = new Date(date.valueOf())
     d.setHours(d.getHours() - hours)
     return d
   }
 
   const addMinutes = (date, minutes) => {
+    const z = tz()
+    if (z) return dtInZone(date, z).plus({ minutes }).toJSDate()
     const d = new Date(date.valueOf())
     d.setMinutes(d.getMinutes() + minutes)
     return d
   }
 
   const subtractMinutes = (date, minutes) => {
+    const z = tz()
+    if (z) return dtInZone(date, z).minus({ minutes }).toJSDate()
     const d = new Date(date.valueOf())
     d.setMinutes(d.getMinutes() - minutes)
     return d
@@ -580,6 +588,21 @@ export const useDateUtils = (initTexts, EnUs, getTimeZone = () => '') => {
   const getCalendarDate = date => (tz() ? dtInZone(date, tz()).day : date.getDate())
   const getWeekdayMon1Sun7 = date => (tz() ? dtInZone(date, tz()).weekday : (date.getDay() || 7))
 
+  /**
+   * Weekday 0 = Sunday .. 6 = Saturday, matching `Date#getDay` and `weekdays` in core/config.
+   *
+   * @param {Date} date
+   * @returns {number}
+   */
+  const getWeekdaySun0 = date => {
+    const z = tz()
+    if (z) {
+      const w = dtInZone(date, z).weekday
+      return w === 7 ? 0 : w
+    }
+    return date.getDay()
+  }
+
   const startOfMonth = date => {
     const z = tz()
     if (z) return startOfMonthInZone(date, z)
@@ -698,6 +721,7 @@ export const useDateUtils = (initTexts, EnUs, getTimeZone = () => '') => {
     getCalendarMonth,
     getCalendarDate,
     getWeekdayMon1Sun7,
+    getWeekdaySun0,
     firstDayOfMonthInYear,
     firstDayOfCalendarYear,
     lastMomentOfMonthInYear,

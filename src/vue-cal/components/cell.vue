@@ -200,20 +200,21 @@ const isCreatingEvent = computed(() => {
 })
 
 const classes = computed(() => {
-  const now = new Date()
-  const viewYear = view.start.getFullYear()
-  const viewMonth = view.start.getMonth()
-  const y = props.start.getFullYear()
-  const m = props.start.getMonth()
-  const weekday = weekdays[props.start.getDay()]
+  const viewYear = dateUtils.getCalendarYear(view.start)
+  const viewMonth = dateUtils.getCalendarMonth(view.start)
+  const y = dateUtils.getCalendarYear(props.start)
+  const m = dateUtils.getCalendarMonth(props.start)
+  const weekday = weekdays[dateUtils.getWeekdaySun0(props.start)]
+  const nowY = dateUtils.getCalendarYear(view.now)
+  const nowM = dateUtils.getCalendarMonth(view.now)
 
   return {
     [`vuecal__cell--${weekday}`]: view.isDay || view.isDays || view.isWeek || view.isMonth,
     [`vuecal__cell--${months[m]}`]: view.isYear,
     [`vuecal__cell--${y}`]: view.isYears,
     'vuecal__cell--today': isToday.value,
-    'vuecal__cell--current-month': view.isYear && y === now.getFullYear() && m === now.getMonth(),
-    'vuecal__cell--current-year': view.isYears && y === now.getFullYear(),
+    'vuecal__cell--current-month': view.isYear && y === nowY && m === nowM,
+    'vuecal__cell--current-year': view.isYears && y === nowY,
     'vuecal__cell--out-of-range': view.isMonth && (y !== viewYear || m !== viewMonth),
     'vuecal__cell--before-min': isDisabled.value && isBeforeMinDate.value,
     'vuecal__cell--after-max': isDisabled.value && isAfterMaxDate.value,
@@ -327,7 +328,7 @@ const showCellEventCount = computed(() => {
  */
 const specialHours = computed(() => {
   if (!config.specialHours || view.isMonth || view.isYear || view.isYears || props.allDay) return
-  const weekday = weekdays[props.start.getDay()]
+  const weekday = weekdays[dateUtils.getWeekdaySun0(props.start)]
   const isHzl = config.horizontal
 
   // The special hours ranges for the current cell day.
