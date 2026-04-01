@@ -111,7 +111,7 @@ export function calendarYmdInZone (date, zone) {
  * @returns {Date}
  */
 export function startOfDayFromPartsInZone (year, month, day, zone) {
-  return DateTime.fromObject({ year, month, day, zone }).startOf('day').toJSDate()
+  return DateTime.fromObject({ year, month, day}, { zone }).startOf('day').toJSDate()
 }
 
 /**
@@ -123,7 +123,7 @@ export function startOfDayFromPartsInZone (year, month, day, zone) {
  */
 export function startOfMonthInZone (date, zone) {
   const dt = dtInZone(date, zone)
-  return DateTime.fromObject({ year: dt.year, month: dt.month, day: 1, zone }).startOf('day').toJSDate()
+  return DateTime.fromObject({ year: dt.year, month: dt.month, day: 1}, { zone }).startOf('day').toJSDate()
 }
 
 /**
@@ -135,7 +135,7 @@ export function startOfMonthInZone (date, zone) {
  */
 export function startOfYearInZone (date, zone) {
   const dt = dtInZone(date, zone)
-  return DateTime.fromObject({ year: dt.year, month: 1, day: 1, zone }).startOf('day').toJSDate()
+  return DateTime.fromObject({ year: dt.year, month: 1, day: 1}, { zone }).startOf('day').toJSDate()
 }
 
 /**
@@ -149,7 +149,7 @@ export function startOfYearInZone (date, zone) {
 export function startOfYearsBlockInZone (date, cellsCount, zone) {
   const y = dtInZone(date, zone).year
   const aligned = y - (y % cellsCount)
-  return DateTime.fromObject({ year: aligned, month: 1, day: 1, zone }).startOf('day').toJSDate()
+  return DateTime.fromObject({ year: aligned, month: 1, day: 1}, { zone }).startOf('day').toJSDate()
 }
 
 /**

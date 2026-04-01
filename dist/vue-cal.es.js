@@ -5839,15 +5839,15 @@ function ro(n, e, t) {
 }
 function io(n, e) {
   const t = oe(n, e);
-  return x.fromObject({ year: t.year, month: t.month, day: 1, zone: e }).startOf("day").toJSDate();
+  return x.fromObject({ year: t.year, month: t.month, day: 1 }, { zone: e }).startOf("day").toJSDate();
 }
 function oo(n, e) {
   const t = oe(n, e);
-  return x.fromObject({ year: t.year, month: 1, day: 1, zone: e }).startOf("day").toJSDate();
+  return x.fromObject({ year: t.year, month: 1, day: 1 }, { zone: e }).startOf("day").toJSDate();
 }
 function lo(n, e, t) {
   const s = oe(n, t).year, a = s - s % e;
-  return x.fromObject({ year: a, month: 1, day: 1, zone: t }).startOf("day").toJSDate();
+  return x.fromObject({ year: a, month: 1, day: 1 }, { zone: t }).startOf("day").toJSDate();
 }
 function uo(n, e) {
   return oe(n, e).endOf("month").toJSDate();
