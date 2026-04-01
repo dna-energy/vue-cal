@@ -57,7 +57,7 @@ export const useVueCal = ({ props, emit, attrs, vuecalEl, uid }) => {
     }
   })
 
-  state.dateUtils = useDateUtils(Object.assign(defaults.texts, state.texts), EnUs)
+  state.dateUtils = useDateUtils(Object.assign(defaults.texts, state.texts), EnUs, () => props.timeZone || '')
   state.config = useConfig(state, props, attrs)
   state.eventsManager = useEvents(state)
   state.view = useView(state, vuecalEl)

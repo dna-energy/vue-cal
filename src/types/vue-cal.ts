@@ -143,6 +143,8 @@ export interface VueCalConfig {
   titleBar?: boolean, // Show or hide the header title bar.
   todayButton?: boolean, // Show or hide the header today button.
   twelveHour?: boolean, // 12 or 24 hour format are respectively written like 1pm and 13:00.
+  /** IANA timezone (e.g. 'America/New_York'). Empty uses the browser local timezone. */
+  timeZone?: string,
   // Sets the calendar view to one of: 'day', 'days', 'week', 'month', 'year', 'years'. Default 'week' or 'month' if datePicker.
   // Gets updated on view navigation.
   view?: VueCalViewKeys,

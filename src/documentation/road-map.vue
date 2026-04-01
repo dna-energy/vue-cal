@@ -27,6 +27,7 @@ ul.kanban
       .task Event count on year views
       .task Events overlap size option
       .task Support SSR
+      .task Support timezones
       .task Improve the event range accuracy while resizing upwards
       .task Events accept dynamic colors
       .task Events snap-to-interval while resizing
@@ -96,7 +97,6 @@ ul.kanban
   li.kanban__column.kanban__column--later.smd-hide
     .title 🕔 Later
     .w-flex.column.gap1.pa1
-      .task Support timezones
       .task Drag &amp; drop multiple day events
       .task Improve multiple day events Month view
 </template>

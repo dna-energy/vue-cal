@@ -24,6 +24,13 @@
         style="width: 60px")
 
     .w-flex.gap2.align-center.justify-end.no-grow
+      .grey Time zone
+      w-select.no-grow(
+        v-model="mainVuecalConfig.timeZone"
+        :items="timeZoneItems"
+        style="min-width: 180px")
+
+    .w-flex.gap2.align-center.justify-end.no-grow
         .grey View Day Offset
         w-input(
           v-model="mainVuecalConfig.viewDayOffset"
@@ -183,6 +190,15 @@ const eventClasses = [
   { value: 'sport', label: 'Sport' }
 ]
 
+const timeZoneItems = [
+  { value: '', label: 'Local (browser)' },
+  { value: 'UTC', label: 'UTC' },
+  { value: 'America/New_York', label: 'America/New_York' },
+  { value: 'America/Los_Angeles', label: 'America/Los_Angeles' },
+  { value: 'Europe/London', label: 'Europe/London' },
+  { value: 'Asia/Tokyo', label: 'Asia/Tokyo' }
+]
+
 const pickerConfig = reactive({
   datePicker: true,
   dark: computed(() => store.darkMode),
@@ -192,7 +208,8 @@ const pickerConfig = reactive({
   todayButton: computed(() => mainVuecalConfig.todayButton),
   hideWeekends: computed(() => mainVuecalConfig.hideWeekends),
   hideWeekdays: computed(() => mainVuecalConfig.hideWeekdays),
-  viewDayOffset: computed(() => mainVuecalConfig.viewDayOffset)
+  viewDayOffset: computed(() => mainVuecalConfig.viewDayOffset),
+  timeZone: computed(() => mainVuecalConfig.timeZone)
 })
 
 const mainVuecalConfig = reactive({
@@ -210,6 +227,7 @@ const mainVuecalConfig = reactive({
   // timeTo: 20 * 60,
   timeStep: 60,
   twelveHour: ref(false),
+  timeZone: ref(''),
   hideWeekends: ref(false),
   hideWeekdays,
   viewDayOffset: ref(0),

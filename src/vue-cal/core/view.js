@@ -14,8 +14,7 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
   // The view date is the one given in prop. It can be any date within the view that will be
   // computed around it - not necessarily the first day of the view range.
   // E.g. [start, ..., viewDate, ..., end]
-  const viewDate = ref(new Date(config.viewDate || now.value))
-  viewDate.value.setHours(0, 0, 0, 0)
+  const viewDate = ref(dateUtils.startOfDay(new Date(config.viewDate || now.value)))
   // The starting point of all the calculations.
   // on created and on navigation, two date ranges are computed:
   // [start-end]: the common date range to use.
@@ -30,7 +29,7 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
     return firstCellDate.value
   })
   const end = computed(() => {
-    if (viewId.value === 'month') return new Date(startTheoretical.value.getFullYear(), startTheoretical.value.getMonth() + 1, 0, 23, 59, 59, 999)
+    if (viewId.value === 'month') return dateUtils.endOfMonth(startTheoretical.value)
     return lastCellDate.value
   })
 
@@ -106,7 +105,7 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
       // previous month. E.g.
       // M  T  W  T  F  S  S
       // 28 29 30 1  2  3  4
-      let weekday = startTheoretical.value.getDay() || 7 // 1-7, starting from Monday.
+      let weekday = dateUtils.getWeekdayMon1Sun7(startTheoretical.value) // 1-7, starting from Monday.
 
       if (config.startWeekOnSunday && !config.hideWeekdays[7]) weekday += 1
       if (config.viewDayOffset) weekday -= config.viewDayOffset
@@ -147,7 +146,7 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
         case 'week':
         case 'month': {
           const start = dateUtils.addDays(firstCellDate.value, i)
-          const weekday = start.getDay() || 7 // 1-7, starting from Monday.
+          const weekday = dateUtils.getWeekdayMon1Sun7(start) // 1-7, starting from Monday.
 
           // If hiding specific weekday or weekend and the current cell is one of these hidden days skip
           // it and add one more date at the end to fill up the cells.
@@ -156,23 +155,26 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
             continue
           }
 
-          const end = new Date(start)
-          end.setHours(23, 59, 59, 999)
+          const end = dateUtils.endOfDay(start)
           dates.push({ start, startFormatted: dateUtils.formatDate(start), end })
           break
         }
-        case 'year':
+        case 'year': {
+          const y = dateUtils.getCalendarYear(firstCellDate.value)
           dates.push({
-            start: new Date(firstCellDate.value.getFullYear(), i, 1, 0, 0, 0, 0),
-            end: new Date(firstCellDate.value.getFullYear(), i + 1, 0, 23, 59, 59, 999)
+            start: dateUtils.firstDayOfMonthInYear(y, i),
+            end: dateUtils.lastMomentOfMonthInYear(y, i)
           })
           break
-        case 'years':
+        }
+        case 'years': {
+          const y0 = dateUtils.getCalendarYear(firstCellDate.value)
           dates.push({
-            start: new Date(firstCellDate.value.getFullYear() + i, 0, 1, 0, 0, 0, 0),
-            end: new Date(firstCellDate.value.getFullYear() + i + 1, 0, 0, 23, 59, 59, 999)
+            start: dateUtils.firstDayOfCalendarYear(y0 + i),
+            end: dateUtils.endOfCalendarYear(y0 + i)
           })
           break
+        }
       }
     }
 
@@ -229,10 +231,10 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
   function formatDateRange(start, end, options) {
     const { monthsArray, monthBeforeDay, canTruncate, xs } = options
 
-    const startMonth = start.getMonth()
-    const startYear = start.getFullYear()
-    const endMonth = end.getMonth()
-    const endYear = end.getFullYear()
+    const startMonth = dateUtils.getCalendarMonth(start)
+    const startYear = dateUtils.getCalendarYear(start)
+    const endMonth = dateUtils.getCalendarMonth(end)
+    const endYear = dateUtils.getCalendarYear(end)
     const crossingMonth = startMonth !== endMonth
     const crossingYear = startYear !== endYear
 
@@ -240,8 +242,8 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
     const shouldTruncate = canTruncate && (xs || crossingMonth)
 
     // Get day numbers directly.
-    const startDay = start.getDate()
-    const endDay = end.getDate()
+    const startDay = dateUtils.getCalendarDate(start)
+    const endDay = dateUtils.getCalendarDate(end)
 
     if (crossingYear) {
       // Different years.
@@ -303,10 +305,10 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
       }
 
       case 'year':
-        return firstCellDate.value.getFullYear()
+        return dateUtils.getCalendarYear(firstCellDate.value)
 
       case 'years':
-        return `${firstCellDate.value.getFullYear()} - ${end.value.getFullYear()}`
+        return `${dateUtils.getCalendarYear(firstCellDate.value)} - ${dateUtils.getCalendarYear(end.value)}`
     }
   })
 
@@ -321,8 +323,7 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
    * scope dates.
    */
   async function updateView () {
-    startTheoretical.value = new Date(viewDate.value || now.value)
-    startTheoretical.value.setHours(0, 0, 0, 0)
+    startTheoretical.value = dateUtils.startOfDay(new Date(viewDate.value || now.value))
 
     switch (viewId.value) {
       case 'day':
@@ -333,15 +334,15 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
         startTheoretical.value = dateUtils.getPreviousFirstDayOfWeek(startTheoretical.value, config.startWeekOnSunday && !config.hideWeekdays[7])
         break
       case 'month':
-        startTheoretical.value = new Date(startTheoretical.value.getFullYear(), startTheoretical.value.getMonth(), 1, 0, 0, 0, 0)
+        startTheoretical.value = dateUtils.startOfMonth(startTheoretical.value)
         break
       case 'year':
-        startTheoretical.value = new Date(startTheoretical.value.getFullYear(), 0, 1, 0, 0, 0, 0)
+        startTheoretical.value = dateUtils.startOfYear(startTheoretical.value)
         break
       case 'years':
         // The modulo is only here to always cut off at the same years regardless of the current year.
         // E.g. always [1975-1999], [2000-2024], [2025-2099] for the default 5*5 grid.
-        startTheoretical.value = new Date(startTheoretical.value.getFullYear() - (startTheoretical.value.getFullYear() % cellsCount.value), 0, 1, 0, 0, 0, 0)
+        startTheoretical.value = dateUtils.startOfYearsBlock(startTheoretical.value, cellsCount.value)
         break
     }
 
@@ -431,26 +432,23 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
         else newViewDate = dateUtils.subtractDays(firstCellDate.value, cellsCount.value)
         break
       case 'week': {
-        if (forward) {
-          newViewDate = dateUtils.addDays(extendedEnd.value, 1)
-          newViewDate.setHours(0, 0, 0, 0)
-        }
+        if (forward) newViewDate = dateUtils.startOfDay(dateUtils.addDays(extendedEnd.value, 1))
         else newViewDate = dateUtils.subtractDays(extendedStart.value, cellsCount.value)
         break
       }
       case 'month': {
         const increment = forward ? 1 : -1
-        newViewDate = new Date(newViewDate.getFullYear(), newViewDate.getMonth() + increment, 1, 0, 0, 0, 0)
+        newViewDate = dateUtils.addCalendarMonth(newViewDate, increment)
         break
       }
       case 'year': {
         const increment = forward ? 1 : -1
-        newViewDate = new Date(newViewDate.getFullYear() + increment, 1, 1, 0, 0, 0, 0)
+        newViewDate = dateUtils.addCalendarYear(newViewDate, increment)
         break
       }
       case 'years': {
         const increment = forward ? cellsCount.value : - (cellsCount.value)
-        newViewDate = new Date(newViewDate.getFullYear() + increment, 1, 1, 0, 0, 0, 0)
+        newViewDate = dateUtils.addCalendarYear(newViewDate, increment)
         break
       }
     }
@@ -459,9 +457,7 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
   }
 
   function goToToday () {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    updateViewDate(today)
+    updateViewDate(dateUtils.startOfDay(new Date()))
   }
 
   /**
@@ -484,15 +480,15 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
     let [viewStart, viewEnd] = [firstCellDate.value, lastCellDate.value]
     if (viewId.value === 'month') ([viewStart, viewEnd] = [start.value, end.value])
 
-    date.setHours(0, 0, 0, 0)
+    const normalized = dateUtils.startOfDay(new Date(date))
     // Always update viewDate so that switching to a narrower view (e.g. month → day) after setting
     // a specific date within the current range correctly lands on that date. Only skip the expensive
     // cell recomputation (updateView) when the date is already in range and no force is requested.
-    viewDate.value = date
-    if (emitUpdate) emit('update:viewDate', date)
+    viewDate.value = normalized
+    if (emitUpdate) emit('update:viewDate', normalized)
 
-    if (!dateUtils.isInRange(date, viewStart, viewEnd) || forceUpdate) {
-      transitionDirection.value = date.getTime() < viewStart.getTime() ? 'left' : 'right'
+    if (!dateUtils.isInRange(normalized, viewStart, viewEnd) || forceUpdate) {
+      transitionDirection.value = normalized.getTime() < viewStart.getTime() ? 'left' : 'right'
       updateView()
     }
   }
@@ -502,9 +498,9 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
 
     const { isValid, isSameDate } = dateUtils
     if (!selectedDate.value || !isValid(selectedDate.value) || !isSameDate(date, selectedDate.value)) {
-      date.setHours(0, 0, 0, 0)
-        selectedDate.value = date
-      if (emitUpdate) emit('update:selectedDate', date)
+      const normalized = dateUtils.startOfDay(new Date(date))
+      selectedDate.value = normalized
+      if (emitUpdate) emit('update:selectedDate', normalized)
     }
   }
 
@@ -514,7 +510,7 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
    * @param {Boolean} bool start the week on Sunday or not.
    */
   function switchWeekStart (bool) {
-    if (!bool && !startTheoretical.value.getDay()) updateViewDate(dateUtils.addDays(startTheoretical.value, 1), true, true)
+    if (!bool && dateUtils.getWeekdayMon1Sun7(startTheoretical.value) === 7) updateViewDate(dateUtils.addDays(startTheoretical.value, 1), true, true)
     else {
       transitionDirection.value = 'left'
       updateView()
@@ -527,8 +523,8 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
    * @param {Boolean} hide hide weekends or not.
    */
   function toggleWeekends (hide) {
-    if (hide && config.startWeekOnSunday && !startTheoretical.value.getDay()) updateViewDate(dateUtils.addDays(startTheoretical.value, 1), true, true)
-    else if (!hide && config.startWeekOnSunday && startTheoretical.value.getDay() === 1) updateViewDate(dateUtils.subtractDays(startTheoretical.value, 1), true, true)
+    if (hide && config.startWeekOnSunday && dateUtils.getWeekdayMon1Sun7(startTheoretical.value) === 7) updateViewDate(dateUtils.addDays(startTheoretical.value, 1), true, true)
+    else if (!hide && config.startWeekOnSunday && dateUtils.getWeekdayMon1Sun7(startTheoretical.value) === 1) updateViewDate(dateUtils.subtractDays(startTheoretical.value, 1), true, true)
   }
 
   /**
@@ -546,8 +542,7 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
   }
 
   function scrollToCurrentTime () {
-    const now = new Date()
-    scrollToTime(now.getHours() * 60 + now.getMinutes())
+    scrollToTime(dateUtils.dateToMinutes(new Date()))
   }
 
   function scrollTop () {
@@ -571,6 +566,7 @@ export const useView = ({ config, dateUtils, emit, texts, eventsManager }, vueca
   watch(() => config.startWeekOnSunday, bool => switchWeekStart(bool))
   watch(() => config.hideWeekends, bool => toggleWeekends(bool))
   watch(() => config.hideWeekdays, toggleWeekdays)
+  watch(() => config.timeZone, () => updateView())
   watch(() => cellsCount.value, () => {
     if (cellsCount.value > 90) console.warn('Vue Cal: high cell count detected. Performance may degrade when interactions are enabled.')
   })
